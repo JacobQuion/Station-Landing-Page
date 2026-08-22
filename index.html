@@ -267,19 +267,7 @@ main{display:flex;flex-direction:column;gap:clamp(84px,10vw,150px);padding-block
 .faq .ans code{font-family:"IBM Plex Mono",monospace;font-size:.85em;color:var(--ink);
   background:var(--raised);border:1px solid var(--line);border-radius:5px;padding:1px 5px}
 
-/* ── cta + footer ───────────────────────────────────────────── */
-.cta{background:var(--surface);border:1px solid var(--line-solid);border-radius:20px;
-  padding:clamp(30px,5vw,54px);display:flex;flex-direction:column;gap:20px;align-items:center;
-  text-align:center;box-shadow:var(--shadow);position:relative;overflow:hidden}
-.cta::before{content:"";position:absolute;inset:0 0 auto 0;height:2px;
-  background:linear-gradient(90deg,transparent,var(--accent),transparent)}
-.cta h2{max-width:18ch}
-.cta p{color:var(--muted);max-width:52ch}
-.form{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;width:min(460px,100%)}
-.form input{flex:1 1 220px;background:var(--bg);border:1px solid var(--line-solid);border-radius:9px;
-  padding:13px 15px;color:var(--ink);font-family:"Instrument Sans",sans-serif;font-size:.95rem}
-.form input::placeholder{color:var(--faint)}
-.form input:focus{outline:none;border-color:var(--accent)}
+/* ── footer ────────────────────────────────────────────────── */
 footer{border-top:1px solid var(--line);padding:26px 0 40px}
 .foot{display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:space-between}
 .foot .c{font-family:"IBM Plex Mono",monospace;font-size:.7rem;color:var(--faint)}
@@ -319,7 +307,7 @@ footer{border-top:1px solid var(--line);padding:26px 0 40px}
     </nav>
     <div class="nav-act">
       <button class="toggle" id="themeBtn" type="button" aria-label="Switch theme">◐</button>
-      <a class="btn btn-primary" href="#start">Get early access</a>
+      <a class="btn btn-primary" href="#demo">Try the demo</a>
     </div>
   </div>
 </header>
@@ -333,8 +321,8 @@ footer{border-top:1px solid var(--line);padding:26px 0 40px}
     <h1>Every deadline you have.<br>One thing to do <em>next</em>.</h1>
     <p class="lede">Station pulls your assignments out of Canvas and your commitments out of your calendars, then decides when the work actually happens — and tells you why.</p>
     <div class="hero-cta">
-      <a class="btn btn-primary btn-lg" href="#start">Get early access</a>
-      <a class="btn btn-ghost btn-lg" href="#demo">Try the live demo</a>
+      <a class="btn btn-primary btn-lg" href="#demo">Try the live demo</a>
+      <a class="btn btn-ghost btn-lg" href="#faq">Read the FAQ</a>
     </div>
     <p class="sources"><b>Canvas</b> · <b>Google Calendar</b> · <b>Apple Calendar</b></p>
   </section>
@@ -520,19 +508,6 @@ footer{border-top:1px solid var(--line);padding:26px 0 40px}
     </div>
   </section>
 
-  <!-- CTA -->
-  <section class="wrap" id="start">
-    <div class="cta rev">
-      <span class="eyebrow">Early access</span>
-      <h2>Open Station tonight, know your Tuesday.</h2>
-      <p>Free while we're in early access. Connect Canvas and a calendar, and you'll have a real plan in about two minutes.</p>
-      <form class="form" id="waitlist">
-        <input type="email" name="email" placeholder="you@school.edu" aria-label="Email address" required>
-        <button class="btn btn-primary btn-lg" type="submit">Request access</button>
-      </form>
-      <p class="note" id="formNote">Station reads your assignments and events. It never submits, posts, or shares anything.</p>
-    </div>
-  </section>
 </main>
 
 <footer>
@@ -542,7 +517,6 @@ footer{border-top:1px solid var(--line);padding:26px 0 40px}
       <a href="#demo">Live demo</a>
       <a href="#facts">How it works</a>
       <a href="#faq">FAQ</a>
-      <a href="#start">Early access</a>
     </nav>
   </div>
 </footer>
@@ -764,14 +738,5 @@ footer{border-top:1px solid var(--line);padding:26px 0 40px}
   }
   $('resetBtn').onclick = reset;
   reset();
-
-  /* ── waitlist ── */
-  var form = $('waitlist'), note = $('formNote');
-  form.addEventListener('submit', function(e){
-    e.preventDefault();
-    note.textContent = 'Thanks — we’ll email you when your school is live.';
-    note.classList.add('ok');
-    form.reset();
-  });
 })();
 </script>
