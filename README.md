@@ -3,12 +3,12 @@
 <img width="1920" height="859" alt="image" src="https://github.com/user-attachments/assets/45f53942-7126-44a4-9f51-074ee8067cc2" />
 
 ## 
-Station is a task manager on steroids. It takes data from your Google Calendar, Google Classroom, and Canvas, and intelligently selects what deliverables need to get done and when. Station also provides a history of your tasks to analyze, showing you areas for improvement and a record of previous assignments to study for exams.
+Station's landing page is decked out with references to the Pomodoro study technique and time management. The website features a live demo of the web app and lets the consumer instantly familiarize themselves with the app's UI.
 
 ## **Highlights**
-- Google Calendar, Google Classroom, and Canvas integration.
-- Customizable time schedules to work around obligations and non-work hours.
-- Animated light bar to provide timely feedback during Pomodoro sessions.
+- Appearing features throughout scroll duration.
+- Animated time highlights when traversing down the page.
+- In-depth explanations for all of Station's features.
 
 ## **Additional**
 - [Landing Page Web View](https://station-landing-page.vercel.app/) (for viewing in the browser).
