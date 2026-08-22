@@ -1,0 +1,777 @@
+<title>Station</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&display=swap">
+
+<style>
+/* ── tokens: dark-first ─────────────────────────────────────── */
+:root{
+  --bg:#0B0B11; --surface:#15151E; --raised:#1C1C27; --line:#26263340;
+  --line-solid:#262633;
+  --ink:#EDEDF3; --ink-2:#B4B4C4; --muted:#8B8B9E; --faint:#5A5A6B;
+  --accent:#7A7BF5; --accent-ink:#0B0B11; --accent-soft:#7A7BF522;
+  --stat:#F06CA8; --bio:#4FD08A; --engl:#8E8CF7; --psy:#4FC7D0; --now:#F0A44F;
+  --shadow:0 1px 0 #FFFFFF08 inset, 0 24px 60px -30px #00000090;
+  --r:14px;
+}
+@media (prefers-color-scheme: light){
+  :root:not([data-theme="dark"]){
+    --bg:#F6F5FA; --surface:#FFFFFF; --raised:#FAF9FD; --line:#1414281A;
+    --line-solid:#E3E1EC;
+    --ink:#14141C; --ink-2:#3D3D50; --muted:#6C6C80; --faint:#9A9AAC;
+    --accent:#4F4FDD; --accent-ink:#FFFFFF; --accent-soft:#4F4FDD14;
+    --stat:#D33E85; --bio:#1E9962; --engl:#5B58D8; --psy:#1E8C97; --now:#C97A1E;
+    --shadow:0 1px 2px #14142808, 0 20px 44px -28px #14142833;
+  }
+}
+:root[data-theme="light"]{
+  --bg:#F6F5FA; --surface:#FFFFFF; --raised:#FAF9FD; --line:#1414281A;
+  --line-solid:#E3E1EC;
+  --ink:#14141C; --ink-2:#3D3D50; --muted:#6C6C80; --faint:#9A9AAC;
+  --accent:#4F4FDD; --accent-ink:#FFFFFF; --accent-soft:#4F4FDD14;
+  --stat:#D33E85; --bio:#1E9962; --engl:#5B58D8; --psy:#1E8C97; --now:#C97A1E;
+  --shadow:0 1px 2px #14142808, 0 20px 44px -28px #14142833;
+}
+
+*{box-sizing:border-box}
+body{
+  background:var(--bg); color:var(--ink);
+  font-family:"Instrument Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  font-size:17px; line-height:1.6; letter-spacing:-0.005em;
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3{font-family:"Familjen Grotesk","Instrument Sans",sans-serif;font-weight:700;letter-spacing:-0.035em;line-height:1.02;text-wrap:balance;margin:0}
+h1{font-size:clamp(2.9rem,6.9vw,5.4rem);line-height:.98;letter-spacing:-0.042em;text-wrap:normal}
+h2{font-size:clamp(1.95rem,4vw,3rem)}
+h3{font-size:1.16rem;letter-spacing:-0.02em;line-height:1.25}
+p{margin:0}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:4px}
+
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums}
+.eyebrow{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.7rem;
+  letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+.lede{font-size:clamp(1.05rem,1.6vw,1.22rem);color:var(--ink-2);max-width:60ch}
+.note{font-family:"IBM Plex Mono",monospace;font-size:.68rem;letter-spacing:.05em;color:var(--faint);line-height:1.7}
+.note.ok{color:var(--bio)}
+
+/* ── the hour rail: the page is shaped like a day ───────────── */
+.rail{position:fixed;inset:0 auto 0 0;width:88px;pointer-events:none;z-index:5;display:none}
+.rail-line{position:absolute;top:0;bottom:0;left:70px;width:1px;background:var(--line-solid)}
+.tick{position:absolute;left:0;width:70px;padding-right:12px;text-align:right;
+  font-family:"IBM Plex Mono",monospace;font-size:.66rem;color:var(--faint);
+  letter-spacing:.06em;transform:translateY(-50%)}
+.tick::after{content:"";position:absolute;right:-1px;top:50%;width:7px;height:1px;background:var(--line-solid)}
+.nowline{position:absolute;left:34px;right:0;height:1px;background:var(--now);opacity:.85}
+.nowline::before{content:"now";position:absolute;left:0;top:-8px;
+  font-family:"IBM Plex Mono",monospace;font-size:.6rem;color:var(--now);letter-spacing:.1em}
+.nowline::after{content:"";position:absolute;right:0;top:-2px;width:5px;height:5px;border-radius:50%;background:var(--now)}
+@media(min-width:1180px){.rail{display:block}.page{padding-left:88px}}
+
+.wrap{width:min(1080px,calc(100% - 48px));margin-inline:auto}
+
+/* ── nav ────────────────────────────────────────────────────── */
+.nav{position:sticky;top:0;z-index:8;backdrop-filter:blur(14px);
+  background:color-mix(in srgb,var(--bg) 82%,transparent);border-bottom:1px solid var(--line)}
+.nav-in{display:flex;align-items:center;gap:28px;padding:14px 0}
+.brand{display:flex;align-items:center;gap:9px;font-family:"Familjen Grotesk",sans-serif;
+  font-weight:700;letter-spacing:-0.03em;font-size:1.06rem;text-decoration:none}
+.mark{width:16px;height:16px;border-radius:4px;background:var(--accent);position:relative;flex:none}
+.mark::after{content:"";position:absolute;left:3px;right:3px;top:7px;height:2px;border-radius:1px;background:var(--accent-ink);opacity:.85}
+.nav-links{display:none;gap:24px;margin-left:auto;font-size:.92rem;color:var(--muted)}
+.nav-links a{text-decoration:none}
+.nav-links a:hover{color:var(--ink)}
+@media(min-width:860px){.nav-links{display:flex}}
+.nav-act{display:flex;align-items:center;gap:10px;margin-left:auto}
+@media(min-width:860px){.nav-act{margin-left:0}}
+
+.btn{display:inline-flex;align-items:center;gap:8px;border:0;cursor:pointer;
+  font-family:"Instrument Sans",sans-serif;font-size:.93rem;font-weight:600;letter-spacing:-0.01em;
+  padding:10px 18px;border-radius:9px;text-decoration:none;transition:transform .15s,background .18s,border-color .18s,color .18s}
+.btn-primary{background:var(--accent);color:var(--accent-ink)}
+.btn-primary:hover{transform:translateY(-1px);background:color-mix(in srgb,var(--accent) 88%,#fff)}
+.btn-ghost{background:transparent;color:var(--ink);border:1px solid var(--line-solid)}
+.btn-ghost:hover{border-color:var(--accent);color:var(--accent)}
+.btn-lg{padding:14px 24px;font-size:1rem}
+.toggle{background:transparent;border:1px solid var(--line-solid);color:var(--muted);
+  width:34px;height:34px;border-radius:9px;cursor:pointer;display:grid;place-items:center;
+  font-size:.85rem;transition:color .18s,border-color .18s}
+.toggle:hover{color:var(--ink);border-color:var(--accent)}
+
+/* ── layout rhythm ──────────────────────────────────────────── */
+main{display:flex;flex-direction:column;gap:clamp(84px,10vw,150px);padding-block:clamp(56px,8vw,96px) clamp(72px,9vw,120px)}
+.sec{display:flex;flex-direction:column;gap:clamp(26px,3.2vw,44px)}
+.sec-head{display:flex;flex-direction:column;gap:14px;max-width:66ch}
+
+/* ═══ 1. HERO ═══════════════════════════════════════════════ */
+/* hero + demo are one opening movement, spaced tighter than the page rhythm */
+.top{display:flex;flex-direction:column;gap:clamp(44px,5.5vw,76px)}
+.hero{display:flex;flex-direction:column;align-items:center;text-align:center;
+  gap:26px;padding-block:clamp(16px,4vw,52px) 0}
+.hero h1 em{font-style:normal;color:var(--accent)}
+.hero .lede{max-width:58ch}
+.hero-cta{display:flex;flex-wrap:wrap;justify-content:center;gap:12px;align-items:center;padding-top:6px}
+.sources{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px;color:var(--faint);
+  font-family:"IBM Plex Mono",monospace;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase}
+.sources b{color:var(--muted);font-weight:500}
+
+/* shared day column */
+.day{display:flex;flex-direction:column;gap:8px}
+.day-hd{display:flex;align-items:baseline;gap:10px}
+.day-hd .d{font-family:"IBM Plex Mono",monospace;font-size:.66rem;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.day-hd .t{font-family:"IBM Plex Mono",monospace;font-size:.7rem;color:var(--faint);margin-left:auto}
+.slot{display:grid;grid-template-columns:58px 1fr;gap:10px;align-items:stretch}
+.slot .hr{font-family:"IBM Plex Mono",monospace;font-size:.64rem;color:var(--faint);
+  text-align:right;padding-top:11px;line-height:1.2}
+.block{border-left:2px solid var(--line-solid);background:var(--raised);
+  border-radius:0 9px 9px 0;padding:9px 12px;display:flex;flex-direction:column;gap:2px;
+  transition:opacity .3s,border-color .3s}
+.block .bt{font-size:.86rem;font-weight:600;letter-spacing:-0.012em;line-height:1.25}
+.block .bm{font-family:"IBM Plex Mono",monospace;font-size:.68rem;color:var(--faint);display:flex;flex-wrap:wrap;gap:8px}
+.block.stat{border-left-color:var(--stat)} .block.stat .c{color:var(--stat)}
+.block.bio{border-left-color:var(--bio)}  .block.bio  .c{color:var(--bio)}
+.block.engl{border-left-color:var(--engl)}.block.engl .c{color:var(--engl)}
+.block.psy{border-left-color:var(--psy)}  .block.psy  .c{color:var(--psy)}
+.block.is-done{opacity:.42}
+.block.is-done .bt{text-decoration:line-through;text-decoration-thickness:1px}
+.moved{color:var(--now)}
+.day-now{position:relative;height:1px;background:var(--now);opacity:.7;margin-left:58px}
+.day-now::after{content:"now";position:absolute;right:0;top:-7px;background:var(--surface);padding-left:6px;
+  font-family:"IBM Plex Mono",monospace;font-size:.58rem;color:var(--now);letter-spacing:.1em}
+
+/* ═══ 2. LIVE DEMO ══════════════════════════════════════════ */
+.demo-bar{display:flex;flex-wrap:wrap;align-items:center;gap:12px}
+.tag{display:inline-flex;align-items:center;gap:7px;font-family:"IBM Plex Mono",monospace;
+  font-size:.64rem;letter-spacing:.13em;text-transform:uppercase;color:var(--bio);
+  border:1px solid color-mix(in srgb,var(--bio) 38%,transparent);border-radius:20px;padding:4px 11px}
+.tag i{width:6px;height:6px;border-radius:50%;background:var(--bio);flex:none}
+.linkish{background:none;border:0;padding:0;cursor:pointer;color:var(--muted);
+  font-family:"IBM Plex Mono",monospace;font-size:.68rem;letter-spacing:.06em;text-decoration:underline;
+  text-underline-offset:3px;margin-left:auto}
+.linkish:hover{color:var(--accent)}
+
+.app{background:var(--surface);border:1px solid var(--line-solid);border-radius:18px;
+  box-shadow:var(--shadow);overflow:hidden}
+.app-top{height:3px;background:linear-gradient(90deg,var(--accent),var(--stat) 55%,var(--now))}
+.app-hd{padding:18px 20px;display:flex;flex-wrap:wrap;gap:14px;align-items:flex-start;
+  border-bottom:1px solid var(--line)}
+.app-hd .greet{display:flex;flex-direction:column;gap:3px;min-width:0}
+.app-hd .h{font-family:"Familjen Grotesk",sans-serif;font-weight:700;font-size:1.3rem;letter-spacing:-0.03em}
+.app-hd .s{font-size:.85rem;color:var(--muted)}
+.app-hd .s b{color:var(--now);font-weight:500}
+.app-hd .acts{display:flex;gap:8px;margin-left:auto}
+.chip{font-family:"Instrument Sans",sans-serif;font-size:.82rem;font-weight:500;padding:8px 14px;
+  border-radius:9px;cursor:pointer;border:1px solid var(--line-solid);background:transparent;color:var(--ink);
+  transition:border-color .18s,color .18s}
+.chip:hover{border-color:var(--accent);color:var(--accent)}
+.chip.flash{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+
+.app-body{display:grid;gap:0}
+@media(min-width:840px){.app-body{grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr)}}
+.pane{padding:20px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.pane+.pane{border-top:1px solid var(--line)}
+@media(min-width:840px){.pane+.pane{border-top:0;border-left:1px solid var(--line)}}
+
+.up-lbl{display:flex;align-items:center;gap:8px;font-family:"IBM Plex Mono",monospace;
+  font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
+.up-lbl i{width:6px;height:6px;border-radius:50%;background:var(--accent);flex:none}
+.up-lbl span{color:var(--muted)}
+.up-title{font-family:"Familjen Grotesk",sans-serif;font-weight:700;font-size:clamp(1.4rem,2.6vw,1.8rem);
+  letter-spacing:-0.035em;line-height:1.06}
+.up-meta{font-family:"IBM Plex Mono",monospace;font-size:.74rem;color:var(--faint);line-height:1.75}
+.up-meta b{font-weight:500}
+.up-meta b.stat{color:var(--stat)} .up-meta b.bio{color:var(--bio)}
+.up-meta b.engl{color:var(--engl)} .up-meta b.psy{color:var(--psy)}
+.why{background:var(--raised);border:1px solid var(--line);border-radius:11px;padding:12px 14px;
+  font-size:.88rem;color:var(--ink-2);line-height:1.5}
+.why b{color:var(--ink);font-weight:600}
+.timer-row{display:flex;align-items:center;gap:16px}
+.ring-wrap{position:relative;width:56px;height:56px;flex:none}
+.ring{width:56px;height:56px;transform:rotate(-90deg)}
+.ring circle{fill:none;stroke-width:3}
+.ring .bg{stroke:var(--line-solid)}
+.ring .fg{stroke:var(--accent);stroke-linecap:round;transition:stroke-dashoffset .95s linear}
+.ring-pct{position:absolute;inset:0;display:grid;place-items:center;
+  font-family:"IBM Plex Mono",monospace;font-size:.6rem;color:var(--muted)}
+.clock{font-family:"IBM Plex Mono",monospace;font-size:clamp(2rem,4vw,2.5rem);font-weight:500;
+  letter-spacing:-0.02em;line-height:1}
+.clock-sub{font-size:.78rem;color:var(--faint);margin-top:4px}
+.controls{display:flex;flex-wrap:wrap;gap:9px}
+.ctl{font-size:.88rem;font-weight:500;padding:9px 16px;border-radius:9px;cursor:pointer;
+  border:1px solid var(--line-solid);background:transparent;color:var(--ink);
+  font-family:"Instrument Sans",sans-serif;transition:border-color .18s,color .18s,background .18s}
+.ctl:hover{border-color:var(--accent);color:var(--accent)}
+.ctl-go{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.ctl-go:hover{background:color-mix(in srgb,var(--accent) 88%,#fff);color:var(--accent-ink)}
+.cleared{display:flex;flex-direction:column;gap:8px;padding:8px 0}
+.cleared .big{font-family:"Familjen Grotesk",sans-serif;font-weight:700;font-size:1.5rem;letter-spacing:-0.03em}
+
+.demo-notes{display:grid;gap:14px}
+@media(min-width:760px){.demo-notes{grid-template-columns:repeat(3,1fr)}}
+.dnote{display:flex;flex-direction:column;gap:7px;padding-top:16px;border-top:1px solid var(--line)}
+.dnote .k{font-family:"IBM Plex Mono",monospace;font-size:.64rem;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--accent)}
+.dnote p{font-size:.9rem;color:var(--ink-2)}
+
+/* ═══ 3. FACTS ══════════════════════════════════════════════ */
+.split{display:grid;gap:18px;align-items:start}
+@media(min-width:900px){.split{grid-template-columns:1fr 1fr;gap:24px}}
+.panel{background:var(--surface);border:1px solid var(--line-solid);border-radius:var(--r);padding:20px;
+  display:flex;flex-direction:column;gap:14px}
+.panel-k{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.panel-k .k{font-family:"IBM Plex Mono",monospace;font-size:.66rem;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--muted)}
+.pill{font-family:"IBM Plex Mono",monospace;font-size:.62rem;letter-spacing:.08em;
+  padding:3px 8px;border-radius:20px;border:1px solid var(--line-solid);color:var(--faint)}
+.pill.bad{color:var(--now);border-color:color-mix(in srgb,var(--now) 40%,transparent)}
+.pill.good{color:var(--bio);border-color:color-mix(in srgb,var(--bio) 40%,transparent)}
+.duelist{display:flex;flex-direction:column}
+.due{display:flex;justify-content:space-between;gap:12px;padding:10px 0;
+  border-bottom:1px solid var(--line);font-size:.9rem}
+.due:last-child{border-bottom:0}
+.due .n{color:var(--ink-2)}
+.due .w{font-family:"IBM Plex Mono",monospace;font-size:.72rem;color:var(--faint);white-space:nowrap}
+.due .w.hot{color:var(--now)}
+
+.grid3{display:grid;gap:14px}
+@media(min-width:760px){.grid3{grid-template-columns:repeat(3,1fr)}}
+.card{background:var(--surface);border:1px solid var(--line-solid);border-radius:var(--r);
+  padding:22px;display:flex;flex-direction:column;gap:9px}
+.card .k{font-family:"IBM Plex Mono",monospace;font-size:.66rem;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--muted)}
+.card p{font-size:.94rem;color:var(--ink-2)}
+.card ul{margin:6px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:6px;
+  font-family:"IBM Plex Mono",monospace;font-size:.74rem;color:var(--faint)}
+.card li::before{content:"→ ";color:var(--accent)}
+
+.spec{display:flex;flex-direction:column;border-top:1px solid var(--line-solid)}
+.row{display:grid;grid-template-columns:1fr;gap:4px;padding:14px 0;border-bottom:1px solid var(--line)}
+@media(min-width:700px){.row{grid-template-columns:220px 1fr;gap:24px;align-items:baseline}}
+.row dt{font-family:"IBM Plex Mono",monospace;font-size:.7rem;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--muted)}
+.row dd{margin:0;font-size:.96rem;color:var(--ink-2)}
+.row dd b{color:var(--ink);font-weight:600}
+
+/* ═══ 4. FAQ ════════════════════════════════════════════════ */
+.faqs{display:flex;flex-direction:column;border-top:1px solid var(--line-solid)}
+.faq{border-bottom:1px solid var(--line)}
+.faq summary{list-style:none;cursor:pointer;padding:18px 0;display:flex;gap:20px;align-items:baseline;
+  font-family:"Familjen Grotesk",sans-serif;font-weight:600;font-size:1.05rem;letter-spacing:-0.022em}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary:hover{color:var(--accent)}
+.faq .plus{margin-left:auto;flex:none;font-family:"IBM Plex Mono",monospace;color:var(--faint);
+  font-size:1rem;transition:transform .22s ease,color .22s}
+.faq[open] .plus{transform:rotate(45deg);color:var(--accent)}
+.faq .ans{padding:0 0 20px;max-width:72ch;color:var(--ink-2);font-size:.97rem;
+  display:flex;flex-direction:column;gap:12px}
+.faq .ans code{font-family:"IBM Plex Mono",monospace;font-size:.85em;color:var(--ink);
+  background:var(--raised);border:1px solid var(--line);border-radius:5px;padding:1px 5px}
+
+/* ── cta + footer ───────────────────────────────────────────── */
+.cta{background:var(--surface);border:1px solid var(--line-solid);border-radius:20px;
+  padding:clamp(30px,5vw,54px);display:flex;flex-direction:column;gap:20px;align-items:center;
+  text-align:center;box-shadow:var(--shadow);position:relative;overflow:hidden}
+.cta::before{content:"";position:absolute;inset:0 0 auto 0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--accent),transparent)}
+.cta h2{max-width:18ch}
+.cta p{color:var(--muted);max-width:52ch}
+.form{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;width:min(460px,100%)}
+.form input{flex:1 1 220px;background:var(--bg);border:1px solid var(--line-solid);border-radius:9px;
+  padding:13px 15px;color:var(--ink);font-family:"Instrument Sans",sans-serif;font-size:.95rem}
+.form input::placeholder{color:var(--faint)}
+.form input:focus{outline:none;border-color:var(--accent)}
+footer{border-top:1px solid var(--line);padding:26px 0 40px}
+.foot{display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:space-between}
+.foot .c{font-family:"IBM Plex Mono",monospace;font-size:.7rem;color:var(--faint)}
+.foot nav{display:flex;flex-wrap:wrap;gap:18px;font-size:.86rem;color:var(--muted)}
+.foot nav a{text-decoration:none}
+.foot nav a:hover{color:var(--ink)}
+
+/* ── motion ─────────────────────────────────────────────────── */
+.rev{opacity:0;transform:translateY(14px);transition:opacity .6s ease,transform .6s cubic-bezier(.2,.7,.3,1)}
+.rev.in{opacity:1;transform:none}
+@media(prefers-reduced-motion:reduce){
+  .rev{opacity:1;transform:none;transition:none}
+  .ring .fg,.faq .plus,.block{transition:none}
+  .btn:hover{transform:none}
+}
+</style>
+
+<div class="rail" aria-hidden="true">
+  <div class="rail-line"></div>
+  <div class="tick" style="top:8%">8 am</div>
+  <div class="tick" style="top:24%">10 am</div>
+  <div class="tick" style="top:40%">12 pm</div>
+  <div class="tick" style="top:56%">2 pm</div>
+  <div class="tick" style="top:72%">4 pm</div>
+  <div class="tick" style="top:88%">6 pm</div>
+  <div class="nowline" id="nowline" style="top:4%"></div>
+</div>
+
+<div class="page">
+<header class="nav">
+  <div class="wrap nav-in">
+    <a class="brand" href="#top"><span class="mark"></span>Station</a>
+    <nav class="nav-links">
+      <a href="#demo">Live demo</a>
+      <a href="#facts">How it works</a>
+      <a href="#faq">FAQ</a>
+    </nav>
+    <div class="nav-act">
+      <button class="toggle" id="themeBtn" type="button" aria-label="Switch theme">◐</button>
+      <a class="btn btn-primary" href="#start">Get early access</a>
+    </div>
+  </div>
+</header>
+
+<main id="top">
+
+  <!-- ═══ 1. HERO + 2. LIVE DEMO ═══ -->
+  <div class="top">
+  <section class="wrap hero">
+    <span class="eyebrow">AI time management for coursework</span>
+    <h1>Every deadline you have.<br>One thing to do <em>next</em>.</h1>
+    <p class="lede">Station pulls your assignments out of Canvas and your commitments out of your calendars, then decides when the work actually happens — and tells you why.</p>
+    <div class="hero-cta">
+      <a class="btn btn-primary btn-lg" href="#start">Get early access</a>
+      <a class="btn btn-ghost btn-lg" href="#demo">Try the live demo</a>
+    </div>
+    <p class="sources"><b>Canvas</b> · <b>Google Calendar</b> · <b>Apple Calendar</b></p>
+  </section>
+
+  <!-- ═══ 2. LIVE DEMO ═══ -->
+  <section class="wrap sec" id="demo">
+    <div class="sec-head rev">
+      <span class="eyebrow">Live demo</span>
+      <h2>This is the real thing. Go ahead and use it.</h2>
+      <p class="lede">A loaded week, four assignments deep. Start the timer, finish a block, skip one — or hit Replan and watch the day rebuild around what's left.</p>
+    </div>
+
+    <div class="demo-bar rev">
+      <span class="tag"><i></i>Interactive · nothing here is connected to a real account</span>
+      <button class="linkish" id="resetBtn" type="button">Reset demo</button>
+    </div>
+
+    <div class="app rev">
+      <div class="app-top"></div>
+      <div class="app-hd">
+        <div class="greet">
+          <div class="h">Good Evening, Jacob.</div>
+          <div class="s" id="stats" aria-live="polite">10h 30m of work left, 4 tasks due this week. <b>1 overdue.</b></div>
+        </div>
+        <div class="acts">
+          <button class="chip" id="replanBtn" type="button">↻ Replan</button>
+        </div>
+      </div>
+
+      <div class="app-body">
+        <div class="pane" id="upPane">
+          <div class="up-lbl"><i></i>Up next · <span id="upWhen">9 am Tomorrow</span></div>
+          <div class="up-title" id="upTitle">Homework 6: Confidence Intervals</div>
+          <div class="up-meta" id="upMeta"></div>
+          <div class="why" id="upWhy"></div>
+          <div class="timer-row">
+            <div class="ring-wrap">
+              <svg class="ring" viewBox="0 0 56 56" aria-hidden="true">
+                <circle class="bg" cx="28" cy="28" r="24"></circle>
+                <circle class="fg" cx="28" cy="28" r="24" id="ringFg" stroke-dasharray="150.8" stroke-dashoffset="150.8"></circle>
+              </svg>
+              <div class="ring-pct mono" id="pct">0%</div>
+            </div>
+            <div>
+              <div class="clock" id="clock">50:00</div>
+              <div class="clock-sub" id="clockSub">ready when you are</div>
+            </div>
+          </div>
+          <div class="controls">
+            <button class="ctl ctl-go" id="startBtn" type="button">▶ Start</button>
+            <button class="ctl" id="doneBtn" type="button">✓ Done</button>
+            <button class="ctl" id="skipBtn" type="button">▶| Skip</button>
+          </div>
+        </div>
+
+        <div class="pane">
+          <div class="day-hd"><span class="d">Today</span><span class="t">10:37 pm</span></div>
+          <div class="day" id="timeline"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="demo-notes rev">
+      <div class="dnote">
+        <span class="k">Why this</span>
+        <p>Every block explains itself in one sentence — what's due, what's left, what it beat out. An AI schedule you can't interrogate is one you'll ignore.</p>
+      </div>
+      <div class="dnote">
+        <span class="k">Done &amp; Skip</span>
+        <p>Both are real signals. Station learns how long your work actually takes and sizes the next block to match.</p>
+      </div>
+      <div class="dnote">
+        <span class="k">Replan</span>
+        <p>One press rebuilds every remaining block against the hours you have left before each deadline — and says so if the math stops working.</p>
+      </div>
+    </div>
+  </section>
+  </div>
+
+  <!-- ═══ 3. FACTS ═══ -->
+  <section class="wrap sec" id="facts">
+    <div class="sec-head rev">
+      <span class="eyebrow">How it works</span>
+      <h2>A due date is not a plan.</h2>
+      <p class="lede">A three-hour problem set due Sunday is not a Sunday problem. Station splits the work into sessions and places them where you're actually free.</p>
+    </div>
+
+    <div class="split">
+      <div class="panel rev">
+        <div class="panel-k"><span class="k">What Canvas tells you</span><span class="pill bad">4 due · no plan</span></div>
+        <div class="duelist">
+          <div class="due"><span class="n">Homework 6: Confidence Intervals</span><span class="w hot">Sun 11:59 pm</span></div>
+          <div class="due"><span class="n">Lab Report 3: Enzyme Kinetics</span><span class="w">Mon 9:00 am</span></div>
+          <div class="due"><span class="n">Reading Response — Ch. 12</span><span class="w">Tue 11:59 pm</span></div>
+          <div class="due"><span class="n">Midterm 2 study guide</span><span class="w">Thu 2:00 pm</span></div>
+        </div>
+        <p class="note">Four rows. Ten and a half hours of work. No indication of when any of it happens.</p>
+      </div>
+      <div class="panel rev">
+        <div class="panel-k"><span class="k">What Station gives you</span><span class="pill good">Today · 5 blocks</span></div>
+        <div class="day">
+          <div class="slot"><span class="hr">9 am</span>
+            <div class="block bio"><span class="bt">BIO 150 Lecture</span><span class="bm"><span class="c">BIO 150</span><span>9:00 – 9:50 am</span></span></div></div>
+          <div class="slot"><span class="hr">10 am</span>
+            <div class="block stat"><span class="bt">Homework 6: Confidence Intervals</span><span class="bm"><span class="c">STAT 118</span><span>50m</span><span class="moved">moved</span></span></div></div>
+          <div class="slot"><span class="hr">11:10 am</span>
+            <div class="block stat"><span class="bt">Homework 6: Confidence Intervals</span><span class="bm"><span class="c">STAT 118</span><span>50m</span><span class="moved">moved</span></span></div></div>
+          <div class="slot"><span class="hr">12:10 pm</span>
+            <div class="block engl"><span class="bt">Reading Response — Ch. 12</span><span class="bm"><span class="c">ENGL 210</span><span>30m</span></span></div></div>
+          <div class="slot"><span class="hr">1:10 pm</span>
+            <div class="block psy"><span class="bt">Midterm 2 study guide</span><span class="bm"><span class="c">PSY 240</span><span>45m</span><span class="moved">moved</span></span></div></div>
+          <div class="day-now"></div>
+        </div>
+        <p class="note">Same four assignments, placed on real hours around a 9 am lecture.</p>
+      </div>
+    </div>
+
+    <div class="grid3">
+      <div class="card rev">
+        <span class="k">Canvas</span>
+        <h3>Assignments, as they're posted</h3>
+        <p>Every assignment, quiz, and due date from every course you're enrolled in.</p>
+        <ul><li>Due dates and point values</li><li>New and edited assignments</li><li>What you've already submitted</li></ul>
+      </div>
+      <div class="card rev">
+        <span class="k">Google Calendar</span>
+        <h3>The hours you don't have</h3>
+        <p>Lectures, labs, shifts, practice. Station plans around them instead of on top of them.</p>
+        <ul><li>Recurring class blocks</li><li>Busy vs. free time</li><li>Multiple calendars at once</li></ul>
+      </div>
+      <div class="card rev">
+        <span class="k">Apple Calendar</span>
+        <h3>Everything on your phone</h3>
+        <p>The plans that never make it into a school calendar still shape your week.</p>
+        <ul><li>iCloud calendars</li><li>Shared and family events</li><li>Sessions pushed back to your phone</li></ul>
+      </div>
+    </div>
+
+    <dl class="spec rev">
+      <div class="row"><dt>Reads</dt><dd><b>Canvas</b> assignments and due dates · <b>Google Calendar</b> · <b>Apple Calendar</b>. Connect one or all three.</dd></div>
+      <div class="row"><dt>Plans</dt><dd>Ten days out, refreshed every time a source changes or you finish a block.</dd></div>
+      <div class="row"><dt>Session length</dt><dd>25 to 50 minutes, sized to the task and to how long your work actually takes you.</dd></div>
+      <div class="row"><dt>Protects</dt><dd>Class, work, and anything already on your calendar. Station plans around your commitments, never over them.</dd></div>
+      <div class="row"><dt>Warns you</dt><dd>The moment the hours left before a deadline stop covering the work left — usually days before you'd notice.</dd></div>
+      <div class="row"><dt>Never does</dt><dd>Submit an assignment, post to Canvas, message a professor, or sell your data.</dd></div>
+      <div class="row"><dt>Platforms</dt><dd>Web today. iOS and Android in early access.</dd></div>
+      <div class="row"><dt>Price</dt><dd><b>Free while in early access.</b> Student pricing when it ships, with a free tier that keeps working.</dd></div>
+    </dl>
+  </section>
+
+  <!-- ═══ 4. FAQ ═══ -->
+  <section class="wrap sec" id="faq">
+    <div class="sec-head rev">
+      <span class="eyebrow">FAQ</span>
+      <h2>The questions everyone asks first.</h2>
+    </div>
+    <div class="faqs rev">
+      <details class="faq"><summary>How does Station know how long an assignment will take?<span class="plus">+</span></summary>
+        <div class="ans"><p>It starts with an estimate from the assignment itself — type, point value, course, and how much time your classmates' patterns suggest. Then it corrects. Every time you finish or skip a block, Station compares the estimate to what really happened and adjusts. By the third week it knows that your stats problem sets run long and your reading responses don't.</p>
+        <p>You can also set an estimate yourself, and Station will respect it.</p></div></details>
+
+      <details class="faq"><summary>What if I disagree with the plan?<span class="plus">+</span></summary>
+        <div class="ans"><p>Then override it. Drag a block, skip it, or mark a task as something you'll handle yourself. Station treats every override as information rather than an error, and replans around your decision.</p>
+        <p>This is why every block carries a <b>Why this</b> line — you can't sensibly disagree with a schedule that won't tell you its reasoning.</p></div></details>
+
+      <details class="faq"><summary>Does Station submit anything to Canvas or email my professors?<span class="plus">+</span></summary>
+        <div class="ans"><p>No. Station's Canvas access is read-only. It sees assignments, due dates, and submission status, and it writes nothing back. Submitting your work is still your job — Station just makes sure you have the hours to do it.</p></div></details>
+
+      <details class="faq"><summary>My professor moved a deadline. Then what?<span class="plus">+</span></summary>
+        <div class="ans"><p>Station notices on the next sync and replans on its own. A deadline that moved closer pulls its sessions forward and pushes lower-priority work back; one that moved out frees the hours for whatever's next most urgent. You get a note explaining what changed and why, not a silently different calendar.</p></div></details>
+
+      <details class="faq"><summary>What about work that isn't in Canvas?<span class="plus">+</span></summary>
+        <div class="ans"><p>Add it manually — a reading your professor mentioned out loud, a grad school application, a club deadline. Anything you add gets scheduled with the same logic as a Canvas assignment. Recurring work, like a weekly problem set, only has to be added once.</p></div></details>
+
+      <details class="faq"><summary>My school doesn't use Canvas. Can I still use it?<span class="plus">+</span></summary>
+        <div class="ans"><p>Yes, with manual entry and your calendars, which covers most of the value. Blackboard, Moodle, and Brightspace connectors are in progress — tell us which one you need when you request access and it moves up the list.</p></div></details>
+
+      <details class="faq"><summary>What happens to my data?<span class="plus">+</span></summary>
+        <div class="ans"><p>It's used to build your schedule and nothing else. Station doesn't sell data, doesn't train public models on your coursework, and doesn't share anything with your school or your professors. Disconnect a source and its data is deleted; delete your account and all of it goes.</p></div></details>
+
+      <details class="faq"><summary>Is this just a to-do list with extra steps?<span class="plus">+</span></summary>
+        <div class="ans"><p>A to-do list tells you what's due. It'll happily show you four assignments and ten hours of work without ever mentioning that you have six free hours before Sunday. Station's job starts exactly where the list stops: deciding which hours the work goes in, in what order, and telling you when the arithmetic no longer works.</p></div></details>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="wrap" id="start">
+    <div class="cta rev">
+      <span class="eyebrow">Early access</span>
+      <h2>Open Station tonight, know your Tuesday.</h2>
+      <p>Free while we're in early access. Connect Canvas and a calendar, and you'll have a real plan in about two minutes.</p>
+      <form class="form" id="waitlist">
+        <input type="email" name="email" placeholder="you@school.edu" aria-label="Email address" required>
+        <button class="btn btn-primary btn-lg" type="submit">Request access</button>
+      </form>
+      <p class="note" id="formNote">Station reads your assignments and events. It never submits, posts, or shares anything.</p>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <span class="c">Station · academic time management</span>
+    <nav>
+      <a href="#demo">Live demo</a>
+      <a href="#facts">How it works</a>
+      <a href="#faq">FAQ</a>
+      <a href="#start">Early access</a>
+    </nav>
+  </div>
+</footer>
+</div>
+
+<script>
+(function(){
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var root = document.documentElement, btn = document.getElementById('themeBtn');
+
+  /* ── theme ── */
+  try { var saved = localStorage.getItem('station-theme'); if (saved === 'light' || saved === 'dark') root.setAttribute('data-theme', saved); } catch(e){}
+  function effectiveTheme(){
+    var set = root.getAttribute('data-theme');
+    if (set === 'light' || set === 'dark') return set;
+    return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+  }
+  btn.addEventListener('click', function(){
+    var next = effectiveTheme() === 'dark' ? 'light' : 'dark';
+    root.setAttribute('data-theme', next);
+    btn.setAttribute('aria-label', 'Switch to ' + (next === 'dark' ? 'light' : 'dark') + ' theme');
+    try { localStorage.setItem('station-theme', next); } catch(e){}
+  });
+
+  /* ── now-line tracks scroll: the page is a day ── */
+  var nowline = document.getElementById('nowline');
+  function trackNow(){
+    var max = document.body.scrollHeight - window.innerHeight;
+    var p = max > 0 ? Math.min(1, Math.max(0, window.scrollY / max)) : 0;
+    nowline.style.top = (4 + p * 92) + '%';
+  }
+  trackNow();
+  window.addEventListener('scroll', trackNow, {passive:true});
+  window.addEventListener('resize', trackNow);
+
+  /* ── reveal ── */
+  var io = new IntersectionObserver(function(es){
+    es.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } });
+  }, {rootMargin:'0px 0px -8% 0px', threshold:0.08});
+  document.querySelectorAll('.rev').forEach(function(el){
+    if (reduce) el.classList.add('in'); else io.observe(el);
+  });
+
+  /* ══ LIVE DEMO ═════════════════════════════════════════════ */
+  var SEED = [
+    {id:1, title:'Homework 6: Confidence Intervals', course:'STAT 118', key:'stat', mins:50, left:180,
+     due:'due Sunday 11:59 pm', overdue:false,
+     why:'Due Sunday 11:59 pm, and 3h of work is still open, nothing else is due sooner.'},
+    {id:2, title:'Lab Report 3: Enzyme Kinetics', course:'BIO 150', key:'bio', mins:50, left:150,
+     due:'due Monday 9:00 am', overdue:false,
+     why:'Needs your lab data while it is fresh, and Monday morning leaves no room to start it late.'},
+    {id:3, title:'Reading Response — Ch. 12', course:'ENGL 210', key:'engl', mins:30, left:30,
+     due:'was due Tuesday 11:59 pm', overdue:true,
+     why:'Already overdue and only 30m of work. Clearing it now stops it from crowding the weekend.'},
+    {id:4, title:'Midterm 2 study guide', course:'PSY 240', key:'psy', mins:45, left:270,
+     due:'due Thursday 2:00 pm', overdue:false,
+     why:'4h30m of review left and one week to spread it over. Short sessions beat one long cram.'}
+  ];
+  var SLOTS = ['10 am','11:10 am','12:10 pm','1:10 pm','2:20 pm','3:30 pm'];
+  var SHIFT = ['11 am','12:10 pm','1:20 pm','2:30 pm','3:40 pm','4:50 pm'];
+
+  var queue, done, moved, shifted, TOTAL, left, tick = null;
+  var C = 150.8;
+  var $ = function(id){ return document.getElementById(id); };
+  var timeline = $('timeline'), stats = $('stats'), upPane = $('upPane');
+
+  function esc(s){ return String(s).replace(/[&<>"]/g, function(c){
+    return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]; }); }
+
+  function blockEl(t, opts){
+    opts = opts || {};
+    var el = document.createElement('div');
+    el.className = 'block ' + t.key + (opts.done ? ' is-done' : '');
+    var bits = '<span class="c">' + esc(t.course) + '</span><span>' + t.mins + 'm</span>';
+    if (opts.done) bits += '<span style="color:var(--bio)">done</span>';
+    else if (opts.moved) bits += '<span class="moved">moved</span>';
+    el.innerHTML = '<span class="bt">' + esc(t.title) + '</span><span class="bm">' + bits + '</span>';
+    return el;
+  }
+  function slotEl(hour, block){
+    var s = document.createElement('div');
+    s.className = 'slot';
+    var h = document.createElement('span');
+    h.className = 'hr'; h.textContent = hour;
+    s.appendChild(h); s.appendChild(block);
+    return s;
+  }
+
+  function renderTimeline(){
+    timeline.innerHTML = '';
+    var lecture = document.createElement('div');
+    lecture.className = 'block bio';
+    lecture.innerHTML = '<span class="bt">BIO 150 Lecture</span><span class="bm"><span class="c">BIO 150</span><span>9:00 – 9:50 am</span></span>';
+    timeline.appendChild(slotEl('9 am', lecture));
+
+    var times = shifted ? SHIFT : SLOTS;
+    done.forEach(function(t){ timeline.appendChild(slotEl('—', blockEl(t, {done:true}))); });
+    queue.forEach(function(t, i){
+      timeline.appendChild(slotEl(times[i] || 'later', blockEl(t, {moved: moved || t.wasSkipped})));
+    });
+
+    var nowEl = document.createElement('div');
+    nowEl.className = 'day-now';
+    timeline.appendChild(nowEl);
+  }
+
+  function renderStats(){
+    var mins = queue.reduce(function(a,t){ return a + t.left; }, 0);
+    var h = Math.floor(mins/60), m = mins % 60;
+    var od = queue.filter(function(t){ return t.overdue; }).length;
+    if (!queue.length){ stats.innerHTML = 'Nothing left on today’s plan. Next block is Thursday 10 am.'; return; }
+    var s = h + 'h ' + (m < 10 ? '0' : '') + m + 'm of work left, ' + queue.length +
+            ' task' + (queue.length === 1 ? '' : 's') + ' due this week.';
+    stats.innerHTML = esc(s) + (od ? ' <b>' + od + ' overdue.</b>' : '');
+  }
+
+  function renderUp(){
+    if (!queue.length){
+      upPane.innerHTML = '<div class="up-lbl"><i></i>Up next</div>' +
+        '<div class="cleared"><span class="big">You’re clear until Thursday.</span>' +
+        '<p style="color:var(--ink-2);font-size:.95rem">Every block on today’s plan is done. Station moved the rest of the week ' +
+        'earlier to keep Sunday free.</p>' +
+        '<p class="note ok">Reset the demo to run it again.</p></div>';
+      return;
+    }
+    var t = queue[0];
+    $('upWhen').textContent = (shifted ? '11 am' : '9 am') + ' Tomorrow';
+    $('upTitle').textContent = t.title;
+    var hl = Math.floor(t.left/60), ml = t.left % 60;
+    var leftStr = hl ? hl + 'h' + (ml ? ml + 'm' : '') + ' left' : ml + 'm left';
+    $('upMeta').innerHTML = '<b class="' + t.key + '">' + esc(t.course) + '</b> · ' + t.mins + 'm · ' +
+      leftStr + '<br>' + esc(t.due);
+    $('upWhy').innerHTML = '<b>Why this:</b> ' + esc(t.why);
+    TOTAL = t.mins * 60; left = TOTAL; paint();
+  }
+
+  function paint(){
+    var clock = $('clock');
+    if (!clock) return;
+    var m = Math.floor(left/60), s = left % 60;
+    clock.textContent = m + ':' + (s < 10 ? '0' : '') + s;
+    var pDone = TOTAL ? (TOTAL - left) / TOTAL : 0;
+    $('ringFg').style.strokeDashoffset = C * (1 - pDone);
+    $('pct').textContent = Math.round(pDone * 100) + '%';
+  }
+  function stopTimer(){
+    clearInterval(tick); tick = null;
+    var b = $('startBtn'); if (b) b.textContent = '▶ Start';
+  }
+  function say(msg){ var s = $('clockSub'); if (s) s.textContent = msg; }
+
+  function render(){ renderUp(); renderTimeline(); renderStats(); bind(); }
+
+  function bind(){
+    var startBtn = $('startBtn');
+    if (!startBtn) return;
+    startBtn.onclick = function(){
+      if (tick){ stopTimer(); say('paused'); return; }
+      say('focusing · ' + queue[0].course);
+      startBtn.textContent = '❙❙ Pause';
+      tick = setInterval(function(){
+        left--; paint();
+        if (left <= 0){ stopTimer(); finish('done'); }
+      }, 1000);
+    };
+    $('doneBtn').onclick = function(){ finish('done'); };
+    $('skipBtn').onclick = function(){ finish('skip'); };
+  }
+
+  function finish(kind){
+    stopTimer();
+    if (!queue.length) return;
+    var t = queue.shift();
+    if (kind === 'done'){
+      t.left = Math.max(0, t.left - t.mins);
+      t.overdue = false;
+      if (t.left > 0){ t.wasSkipped = false; queue.push(t); }
+      else { done.push(t); }
+    } else {
+      t.wasSkipped = true;
+      queue.push(t);
+    }
+    render();
+    say(kind === 'done' ? 'block logged · next one queued' : 'skipped · Station replanned around it');
+  }
+
+  $('replanBtn').onclick = function(){
+    stopTimer();
+    moved = true; shifted = !shifted;
+    queue.sort(function(a,b){ return (b.overdue - a.overdue) || (b.left - a.left); });
+    render();
+    say('replanned · ' + queue.length + ' block' + (queue.length === 1 ? '' : 's') + ' moved');
+    var b = $('replanBtn');
+    b.classList.add('flash');
+    setTimeout(function(){ b.classList.remove('flash'); }, 700);
+  };
+
+  function reset(){
+    stopTimer();
+    queue = SEED.map(function(t){ var c = {}; for (var k in t) c[k] = t[k]; c.wasSkipped = false; return c; });
+    done = []; moved = false; shifted = false;
+    upPane.innerHTML =
+      '<div class="up-lbl"><i></i>Up next · <span id="upWhen">9 am Tomorrow</span></div>' +
+      '<div class="up-title" id="upTitle"></div>' +
+      '<div class="up-meta" id="upMeta"></div>' +
+      '<div class="why" id="upWhy"></div>' +
+      '<div class="timer-row"><div class="ring-wrap">' +
+        '<svg class="ring" viewBox="0 0 56 56" aria-hidden="true">' +
+        '<circle class="bg" cx="28" cy="28" r="24"></circle>' +
+        '<circle class="fg" cx="28" cy="28" r="24" id="ringFg" stroke-dasharray="150.8" stroke-dashoffset="150.8"></circle>' +
+        '</svg><div class="ring-pct mono" id="pct">0%</div></div>' +
+        '<div><div class="clock" id="clock">50:00</div>' +
+        '<div class="clock-sub" id="clockSub">ready when you are</div></div></div>' +
+      '<div class="controls">' +
+        '<button class="ctl ctl-go" id="startBtn" type="button">▶ Start</button>' +
+        '<button class="ctl" id="doneBtn" type="button">✓ Done</button>' +
+        '<button class="ctl" id="skipBtn" type="button">▶| Skip</button></div>';
+    render();
+  }
+  $('resetBtn').onclick = reset;
+  reset();
+
+  /* ── waitlist ── */
+  var form = $('waitlist'), note = $('formNote');
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    note.textContent = 'Thanks — we’ll email you when your school is live.';
+    note.classList.add('ok');
+    form.reset();
+  });
+})();
+</script>
